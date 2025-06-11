@@ -6,7 +6,7 @@ This GitHub Action automatically builds and uploads documentation (including blu
 
 First, please ensure GitHub Pages is enabled for your project: go to Settings > Pages and under Build and deployment > Source select "GitHub Actions" from the dropdown menu.
 
-Then, add this action to the end of the workflow that builds your project, and give the workflow write permissions to GitHub Pages. For blueprint support, add `blueprint: true` to the action inputs.
+Then, add this action to the end of the workflow that builds your project, and give the workflow write permissions to GitHub Pages. For blueprint support, add `blueprint: true` to the action inputs. Commit and push the changes.
 
 When CI completes, the API documentation can be found at `https://YOUR_USERNAME.github.io/YOUR_PROJECT_NAME/docs`.
 
@@ -76,3 +76,9 @@ Default value: `.`
 
 The directory containing the Lake package to build.
 This parameter is also passed as the `lake_package_directory` argument of https://github.com/leanprover/lean-action.
+
+## Contributing
+
+Before committing code, please run `npm run bundle` to ensure code is formatted and bundled for execution.
+
+If you want to test these actions, feel free to fork Vierkantor/docgen-tester and make any required modifications there.
