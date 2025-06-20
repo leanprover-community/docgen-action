@@ -1,6 +1,10 @@
 name: "Documentation generation"
 description: "Generates API documentation for your Lean project"
 inputs:
+  api_docs:
+    description: Set to true to build API docs alongside the rest of your documentation. (This is enabled by default but can be disabled if you are only interested in the blueprint.)
+    required: false
+    default: "true"
   blueprint:
     description: Set to true to build a blueprint alongside your documentation.
     required: false
@@ -76,7 +80,7 @@ runs:
       shell: bash
 
     - name: Build project API documentation
-      if: github.event_name == 'push'
+      if: github.event_name == 'push' && inputs.api_docs == 'true'
       run: ${{ github.action_path }}/scripts/build_docs.sh
       shell: bash
       env:
@@ -85,7 +89,7 @@ runs:
         HOMEPAGE: ${{ inputs.homepage }}
 
     - name: Bundle dependencies
-      if: github.event_name == 'push'
+      if: github.event_name == 'push' && env.DOCS_EXISTS == 'true'
       uses: ruby/setup-ruby@eaecf785f6a34567a6d97f686bbb7bccc1ac1e5c # v1.237.0
       with:
         working-directory: ${{ inputs.homepage }}
