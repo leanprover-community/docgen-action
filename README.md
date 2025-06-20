@@ -77,6 +77,14 @@ Default value: `.`
 The directory containing the Lake package to build.
 This parameter is also passed as the `lake_package_directory` argument of https://github.com/leanprover/lean-action.
 
+### input: `api_docs`
+
+Allowed values: `false`, `true`
+
+Default value: `true`
+
+Set to true to build API docs alongside the rest of your documentation. (This is enabled by default but can be disabled if you are only interested in the blueprint.)
+
 ## Contributing
 
 Before committing code, please run `npm run bundle` to ensure code is formatted and bundled for execution.
