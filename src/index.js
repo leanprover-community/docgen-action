@@ -5,6 +5,35 @@ import fs from "fs";
 import path from "path";
 import TOML from "smol-toml";
 
+/// Map a package name into an array of modules available from that package.
+/// For example, 'mathlib' maps to 'Mathlib'.
+function pkgToModuleNames(pkgName) {
+  // Known package->module mappings, copied from Mathlib.
+  const knownMap = {
+    Cli: ["Cli"],
+    LeanSearchClient: ["LeanSearchClient"],
+    Qq: ["Qq"],
+    aesop: ["Aesop"],
+    batteries: ["Batteries"],
+    importGraph: ["ImportGraph"],
+    mathlib: ["Mathlib", "Archive", "Counterexamples"],
+    plausible: ["Plausible"],
+    proofwidgets: ["ProofWidgets"],
+  };
+  if (pkgName in knownMap) {
+    return knownMap[pkgName];
+  }
+  // Fallback heuristic: use the same string-to-UpperCamelCase algorithm that `lake new` uses.
+  const upperCamelCased = pkgName
+    .split(/[-_]/)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join("");
+  console.log(
+    `Warning: Unknown package ${pkgName}, predicted module name: ${upperCamelCased}. If this is the wrong module name and causes a cache miss, please open an issue on leanprover-community/docgen-action.`,
+  );
+  return [upperCamelCased];
+}
+
 /**
  * Parse the Lake package definitions.
  */
@@ -33,7 +62,9 @@ try {
   // explicit dependencies are those specified (transitively) as a dependency in lakefiles,
   // and the full list of those can be found in the manifest.
   const lakeManifest = JSON.parse(lakeManifestContents);
-  const explicitDependencies = lakeManifest.packages.map((pkg) => pkg.name);
+  const explicitDependencies = lakeManifest.packages.flatMap((pkg) =>
+    pkgToModuleNames(pkg.name),
+  );
   const implicitDependencies = ["Init", "Lake", "Lean", "Std"];
   const cacheablePaths = explicitDependencies
     .concat(implicitDependencies)
