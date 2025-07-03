@@ -38,7 +38,9 @@ runs:
       # With the current setup, this condition should always be true (except for Lean itself perhaps).
       # However, if it turns out false that just means we have nothing to cache,
       # and so we skip the caching step, instead of erroring due to an empty `path` input.
-      if: steps.determine-project-metadata.outputs.cached_docbuild_dependencies != ''
+      if: |
+        github.event_name == 'push' && inputs.api_docs == 'true' &&
+          steps.determine-project-metadata.outputs.cached_docbuild_dependencies != ''
       uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
       with:
         path: ${{ steps.determine-project-metadata.outputs.cached_docbuild_dependencies }}
