@@ -43,7 +43,7 @@ try {
     lakefileContents = fs.readFileSync("lakefile.toml", "utf-8");
   } catch (error) {
     throw new Error(
-      `Could not find \`lakefile.toml\`.\nNote: nested error: ${error}.\nHint: make sure the \`lake_package_directory\` input is set to a directory containing a lakefile.`,
+      `Could not find \`lakefile.toml\`.\nNote: nested error: ${error}.\nHint: make sure the \`lake-package-directory\` input is set to a directory containing a lakefile.`,
     );
   }
   const lakefile = TOML.parse(lakefileContents);

@@ -3,15 +3,28 @@
 import commonjs from "@rollup/plugin-commonjs";
 import { nodeResolve } from "@rollup/plugin-node-resolve";
 
-const config = {
-  input: "src/index.js",
-  output: {
-    esModule: true,
-    file: "dist/index.js",
-    format: "es",
-    sourcemap: true,
+const config = [
+  {
+    input: "src/index.js",
+    output: {
+      esModule: true,
+      file: "dist/index.js",
+      format: "es",
+      sourcemap: true,
+    },
+    plugins: [commonjs(), nodeResolve({ preferBuiltins: true })],
   },
-  plugins: [commonjs(), nodeResolve({ preferBuiltins: true })],
-};
+  // DEPRECATION HANDLER BUILD TARGET - Remove this when dropping deprecation support
+  {
+    input: "src/deprecation.js",
+    output: {
+      esModule: true,
+      file: "dist/deprecation.js",
+      format: "es",
+      sourcemap: true,
+    },
+    plugins: [commonjs(), nodeResolve({ preferBuiltins: true })],
+  },
+];
 
 export default config;
