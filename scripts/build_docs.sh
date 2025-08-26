@@ -12,8 +12,8 @@ set -euo pipefail
 # either the `v4.X.Y` or `v4.X.Y-rcZ` tags, or the `main` or `nightly-testing` branches.
 determine_doc_gen_rev() {
     local toolchain_content
-    local first_field
-    local second_field
+    local toolchain_repository
+    local toolchain_revision
     
     # We are going to use the toolchain file to determine the revision,
     # or fall back to the `main` branch.
