@@ -35,7 +35,6 @@ determine_doc_gen_rev() {
         return 0
     fi
     
-    # Check if second field matches v4.X.Y or v4.X.Y-rcZ pattern
     if [[ "$second_field" =~ ^v4\.[0-9]+\.[0-9]+(-rc[0-9]+)?$ ]]; then
         echo "$second_field"
         return 0
