@@ -26,29 +26,29 @@ determine_doc_gen_rev() {
     toolchain_content=$(< lean-toolchain)
     
     # Split on repository name and revision.
-    first_field=$(echo "$toolchain_content" | cut -f1 -d:)
-    second_field=$(echo "$toolchain_content" | cut -f2 -d:)
+    toolchain_repository=$(echo "$toolchain_content" | cut -f1 -d:)
+    toolchain_revision=$(echo "$toolchain_content" | cut -f2 -d:)
     
-    if [[ "$first_field" != "leanprover/lean4" ]]; then
-        echo "Warning: Expected 'leanprover/lean4' as first field in lean-toolchain, got '$first_field'. Falling back to main branch" >&2
+    if [[ "$toolchain_repository" != "leanprover/lean4" ]]; then
+        echo "Warning: Expected 'leanprover/lean4' as first field in lean-toolchain, got '$toolchain_repository'. Falling back to main branch" >&2
         echo "main"
         return 0
     fi
     
-    if [[ "$second_field" =~ ^v4\.[0-9]+\.[0-9]+(-rc[0-9]+)?$ ]]; then
-        echo "$second_field"
+    if [[ "$toolchain_revision" =~ ^v4\.[0-9]+\.[0-9]+(-rc[0-9]+)?$ ]]; then
+        echo "$toolchain_revision"
         return 0
     fi
     
     # We match nightly-testing branches by looking for a revision starting with `nightly`.
-    if [[ "$second_field" == *"nightly"* ]]; then
-        echo "Warning: Detected nightly build '$second_field', falling back to nightly-testing branch" >&2
+    if [[ "$toolchain_revision" == *"nightly"* ]]; then
+        echo "Warning: Detected nightly build '$toolchain_revision', falling back to nightly-testing branch" >&2
         echo "nightly-testing"
         return 0
     fi
     
     # Default fallback
-    echo "Warning: Unexpected toolchain format '$second_field', falling back to main branch" >&2
+    echo "Warning: Unexpected toolchain format '$toolchain_revision', falling back to main branch" >&2
     echo "main"
     return 0
 }
