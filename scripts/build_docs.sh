@@ -7,13 +7,16 @@ set -euo pipefail
 # Build HTML documentation for the project
 # The output will be located in docs/docs
 
-# Function to validate and determine doc-gen4 revision
+# Determine the `doc-gen4` revision to use as a dependency,
+# based on the `lean-toolchain` of this project:
+# either the `v4.X.Y` or `v4.X.Y-rcZ` tags, or the `main` or `nightly-testing` branches.
 determine_doc_gen_rev() {
     local toolchain_content
     local first_field
     local second_field
     
-    # Read the lean-toolchain file
+    # We are going to use the toolchain file to determine the revision,
+    # or fall back to the `main` branch.
     if [[ ! -f "lean-toolchain" ]]; then
         echo "Warning: lean-toolchain file not found, falling back to main branch" >&2
         echo "main"
@@ -22,11 +25,10 @@ determine_doc_gen_rev() {
     
     toolchain_content=$(< lean-toolchain)
     
-    # Extract first and second fields
+    # Split on repository name and revision.
     first_field=$(echo "$toolchain_content" | cut -f1 -d:)
     second_field=$(echo "$toolchain_content" | cut -f2 -d:)
     
-    # Validate first field should be leanprover/lean4
     if [[ "$first_field" != "leanprover/lean4" ]]; then
         echo "Warning: Expected 'leanprover/lean4' as first field in lean-toolchain, got '$first_field'. Falling back to main branch" >&2
         echo "main"
@@ -39,7 +41,7 @@ determine_doc_gen_rev() {
         return 0
     fi
     
-    # Check if it contains 'nightly'
+    # We match nightly-testing branches by looking for a revision starting with `nightly`.
     if [[ "$second_field" == *"nightly"* ]]; then
         echo "Warning: Detected nightly build '$second_field', falling back to nightly-testing branch" >&2
         echo "nightly-testing"
