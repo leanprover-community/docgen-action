@@ -85,6 +85,22 @@ Default value: `true`
 
 Set to true to build API docs alongside the rest of your documentation. (This is enabled by default but can be disabled if you are only interested in the blueprint.)
 
+### input: `build-page`
+
+Allowed values: `false`, `true`
+
+Default value: `true`
+
+Set to true to build the homepage using Jekyll alongside the rest of your documentation. (This is enabled by default but can be disabled if you are only interested in the API docs and/or blueprint.)
+
+### input: `deploy`
+
+Allowed values: `false`, `true`
+
+Default value: `true`
+
+Set to true to deploy the built documentation (API docs and/or blueprint and/or homepage) to GitHub Pages. (This is enabled by default but can be disabled for a dry run.)
+
 ## Deprecated Parameters
 
 The following parameter names are deprecated and will be removed in a future version:

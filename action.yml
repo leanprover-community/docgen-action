@@ -13,6 +13,14 @@ inputs:
     description: Set to true to build a blueprint alongside your documentation.
     required: false
     default: "false"
+  build-page:
+    description: Set to true to build the homepage using Jekyll alongside the rest of your documentation. (This is enabled by default but can be disabled if you are only interested in the API docs and/or blueprint.)
+    required: false
+    default: "true"
+  deploy:
+    description: Set to true to deploy the built documentation (API docs and/or blueprint and/or homepage) to GitHub Pages. (This is enabled by default but can be disabled for a dry run.)
+    required: false
+    default: "true"
   homepage:
     description: The folder where the Jekyll site can be found.
     required: false
@@ -68,6 +76,7 @@ runs:
 
     - name: Check for ${{ inputs.homepage }} folder # this is meant to detect a Jekyll-based website
       id: check_docs
+      if: inputs.build-page == 'true'
       run: |
         if [ -d ${{ inputs.homepage }} ]; then
           echo "The '${{ inputs.homepage }}' folder exists in the repository."
@@ -116,7 +125,7 @@ runs:
         HOMEPAGE: ${{ inputs.homepage }}
 
     - name: Bundle dependencies
-      if: github.event_name == 'push' && env.DOCS_EXISTS == 'true'
+      if: github.event_name == 'push' && inputs.build-page == 'true' && env.DOCS_EXISTS == 'true'
       uses: ruby/setup-ruby@eaecf785f6a34567a6d97f686bbb7bccc1ac1e5c # v1.237.0
       with:
         working-directory: ${{ inputs.homepage }}
@@ -124,7 +133,7 @@ runs:
         bundler-cache: true # Enable caching for bundler
 
     - name: Build website using Jekyll
-      if: github.event_name == 'push' && env.DOCS_EXISTS == 'true'
+      if: github.event_name == 'push' && inputs.build-page == 'true' && env.DOCS_EXISTS == 'true'
       working-directory: ${{ inputs.homepage }}
       env:
         JEKYLL_GITHUB_TOKEN: ${{ github.token }}
@@ -132,12 +141,12 @@ runs:
       shell: bash
 
     - name: "Upload website (API documentation, blueprint and any home page)"
-      if: github.event_name == 'push'
+      if: github.event_name == 'push' && inputs.deploy == 'true'
       uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
       with:
         path: ${{ env.DOCS_EXISTS == 'true' && format('{0}/_site', inputs.homepage) || format('{0}/', inputs.homepage) }}
 
     - name: Deploy to GitHub Pages
-      if: github.event_name == 'push'
+      if: github.event_name == 'push' && inputs.deploy == 'true'
       id: deployment
       uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5
