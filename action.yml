@@ -57,6 +57,13 @@ runs:
       id: deprecation
       run: node "${{ github.action_path }}/dist/deprecation.js"
       shell: bash
+      env:
+        INPUT_API_DOCS: ${{ inputs.api_docs }}
+        INPUT_API-DOCS: ${{ inputs.api-docs }}
+        INPUT_BUILD_ARGS: ${{ inputs.build_args }}
+        INPUT_BUILD-ARGS: ${{ inputs.build-args }}
+        INPUT_LAKE-PACKAGE-DIRECTORY: ${{ inputs.lake-package-directory }}
+        INPUT_LAKE_PACKAGE_DIRECTORY: ${{ inputs.lake_package_directory }}
 
     - name: Parse the project metadata.
       id: determine-project-metadata
