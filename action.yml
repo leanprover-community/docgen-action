@@ -106,6 +106,10 @@ runs:
         run: |
           # TODO: When dropping deprecation support, change this back to ${{ inputs.lake-package-directory }}
           cd ${{ env.LAKE_PACKAGE_DIRECTORY }}
+          # Workaround: since leanblueprint assumes that it should be working in the nearest git repository,
+          # if the lake package directory is something other than the main git repository, set up a trivial
+          # git repository so that leanblueprint works correctly.
+          [ ! -d .git ] && git init
           # Install necessary dependencies and build the blueprint
           apk update
           apk add --update make py3-pip git pkgconfig graphviz graphviz-dev gcc musl-dev
