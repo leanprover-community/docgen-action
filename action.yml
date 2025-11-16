@@ -99,6 +99,8 @@ runs:
       shell: bash
 
     - name: Build blueprint and copy to `${{ inputs.homepage }}/blueprint`
+      # TODO: When dropping deprecation support, change this back to: working-directory: ${{ inputs.lake-package-directory }}
+      working-directory: ${{ env.LAKE_PACKAGE_DIRECTORY }}
       if: inputs.blueprint == 'true'
       uses: xu-cheng/texlive-action@f886de8159e5952a131848a5fa9c3196a2132b5d # v2
       with:
@@ -121,6 +123,8 @@ runs:
           cp -r blueprint/web ${{ inputs.homepage }}/blueprint
 
     - name: Check declarations mentioned in the blueprint exist in Lean code
+      # TODO: When dropping deprecation support, change this back to: working-directory: ${{ inputs.lake-package-directory }}
+      working-directory: ${{ env.LAKE_PACKAGE_DIRECTORY }}
       if: inputs.blueprint == 'true'
       run: ~/.elan/bin/lake exe checkdecls blueprint/lean_decls
       shell: bash
