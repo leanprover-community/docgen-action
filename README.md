@@ -101,6 +101,12 @@ Default value: `true`
 
 Set to true to deploy the built documentation (API docs and/or blueprint and/or homepage) to GitHub Pages. (This is enabled by default but can be disabled for a dry run.)
 
+### input: `references`
+
+Default value: `references.bib`
+
+Path to a BibTeX (.bib) file used for generating the references page and link formatting.
+
 ## Deprecated Parameters
 
 The following parameter names are deprecated and will be removed in a future version:
