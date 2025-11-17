@@ -79,6 +79,12 @@ EOF
 # Initialise docbuild as a Lean project
 cd docbuild
 
+# Place references.bib in the location expected by doc-gen4
+if [ -f ../$REFERENCES ]; then
+  mkdir -p docs
+  cp ../$REFERENCES ./docs/references.bib
+fi
+
 # Disable an error message due to a non-blocking bug. See Zulip
 MATHLIB_NO_CACHE_ON_UPDATE=1 ~/.elan/bin/lake update $NAME
 
