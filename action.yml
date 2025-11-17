@@ -106,10 +106,6 @@ runs:
         run: |
           # TODO: When dropping deprecation support, change this back to ${{ inputs.lake-package-directory }}
           cd ${{ env.LAKE_PACKAGE_DIRECTORY }}
-          # Workaround: since leanblueprint assumes that it should be working in the nearest git repository,
-          # if the lake package directory is something other than the main git repository, set up a trivial
-          # git repository so that leanblueprint works correctly.
-          [ ! -d .git ] && git init
           # Install necessary dependencies and build the blueprint
           apk update
           apk add --update make py3-pip git pkgconfig graphviz graphviz-dev gcc musl-dev
@@ -120,14 +116,25 @@ runs:
           pip install --upgrade pip requests wheel
           pip install pygraphviz --config-settings="--global-option=build_ext" --config-settings="--global-option=-L/usr/lib/graphviz/" --config-settings="--global-option=-R/usr/lib/graphviz/"
           pip install leanblueprint
+          # Workaround: since leanblueprint assumes that it should be working from the nearest git
+          # repository root, if the lake package directory is *not* a repo root, we'll be in the wrong
+          # directory. So set up a trivial git repo to convince leanblueprint to work in this dir.
+          if [ ! -d .git ]; then
+            FAKE_GIT=true
+            git init
+          fi
           leanblueprint pdf
-          mkdir -p ${{ inputs.homepage }}
-          cp blueprint/print/print.pdf ${{ inputs.homepage }}/blueprint.pdf
+          mkdir -p ${{ github.workspace }}/${{ inputs.homepage }}
+          cp blueprint/print/print.pdf ${{ github.workspace }}/${{ inputs.homepage }}/blueprint.pdf
           leanblueprint web
-          cp -r blueprint/web ${{ inputs.homepage }}/blueprint
+          cp -r blueprint/web ${{ github.workspace }}/${{ inputs.homepage }}/blueprint
+          # Clean up after ourselves in case subsequent steps care about version control state
+          if [[ $FAKE_GIT ]]; then
+            rm -rf .git
+          fi
 
     - name: Check declarations mentioned in the blueprint exist in Lean code
-      # TODO: When dropping deprecation support, change this back to: working-directory: ${{ inputs.lake-package-directory }}
+      # TODO: When dropping deprecation support, change this back to: ${{ inputs.lake-package-directory }}
       working-directory: ${{ env.LAKE_PACKAGE_DIRECTORY }}
       if: inputs.blueprint == 'true'
       run: ~/.elan/bin/lake exe checkdecls blueprint/lean_decls
@@ -137,6 +144,9 @@ runs:
       # TODO: When dropping deprecation support, change this back to: inputs.api-docs == 'true'
       if: github.event_name == 'push' && env.API_DOCS == 'true'
       run: ${{ github.action_path }}/scripts/build_docs.sh
+      # TODO: When dropping deprecation support, change this back to: ${{ inputs.lake-package-directory }}
+      working-directory: ${{ env.LAKE_PACKAGE_DIRECTORY }}
+
       shell: bash
       env:
         NAME: ${{ steps.determine-project-metadata.outputs.name }}
