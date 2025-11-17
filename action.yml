@@ -146,13 +146,12 @@ runs:
       run: ${{ github.action_path }}/scripts/build_docs.sh
       # TODO: When dropping deprecation support, change this back to: ${{ inputs.lake-package-directory }}
       working-directory: ${{ env.LAKE_PACKAGE_DIRECTORY }}
-
       shell: bash
       env:
         NAME: ${{ steps.determine-project-metadata.outputs.name }}
         DOCS_FACETS: ${{ steps.determine-project-metadata.outputs.docs_facets }}
-        HOMEPAGE: ${{ inputs.homepage }}
         REFERENCES : ${{ inputs.references }}
+        HOMEPAGE: ${{ github.workspace }}/${{ inputs.homepage }}
 
     - name: Bundle dependencies
       if: github.event_name == 'push' && inputs.build-page == 'true' && env.DOCS_EXISTS == 'true'

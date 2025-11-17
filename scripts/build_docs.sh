@@ -4,6 +4,9 @@
 # treat unset variables as an error, and ensure errors in pipelines are not masked.
 set -euo pipefail
 
+# Log what we're doing
+set -x
+
 # Build HTML documentation for the project
 # The output will be located in docs/docs
 
@@ -14,7 +17,7 @@ determine_doc_gen_rev() {
     local toolchain_content
     local toolchain_repository
     local toolchain_revision
-    
+
     # We are going to use the toolchain file to determine the revision,
     # or fall back to the `main` branch.
     if [[ ! -f "lean-toolchain" ]]; then
@@ -22,31 +25,31 @@ determine_doc_gen_rev() {
         echo "main"
         return 0
     fi
-    
+
     toolchain_content=$(< lean-toolchain)
-    
+
     # Split on repository name and revision.
     toolchain_repository=$(echo "$toolchain_content" | cut -f1 -d:)
     toolchain_revision=$(echo "$toolchain_content" | cut -f2 -d:)
-    
+
     if [[ "$toolchain_repository" != "leanprover/lean4" ]]; then
         echo "Warning: Expected 'leanprover/lean4' as first field in lean-toolchain, got '$toolchain_repository'. Falling back to main branch" >&2
         echo "main"
         return 0
     fi
-    
+
     if [[ "$toolchain_revision" =~ ^v4\.[0-9]+\.[0-9]+(-rc[0-9]+)?$ ]]; then
         echo "$toolchain_revision"
         return 0
     fi
-    
+
     # We match nightly-testing branches by looking for a revision starting with `nightly`.
     if [[ "$toolchain_revision" == *"nightly"* ]]; then
         echo "Warning: Detected nightly build '$toolchain_revision', falling back to nightly-testing branch" >&2
         echo "nightly-testing"
         return 0
     fi
-    
+
     # Default fallback
     echo "Warning: Unexpected toolchain format '$toolchain_revision', falling back to main branch" >&2
     echo "main"
