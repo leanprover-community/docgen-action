@@ -28420,6 +28420,12 @@ try {
   const cacheablePaths = explicitDependencies
     .concat(implicitDependencies)
     .map((dep) => `docbuild/.lake/build/doc/${dep}`);
+  // Also cache doc-data which contains per-module declaration-data-*.bmp files.
+  // These are read by `doc-gen4 index` to produce the combined declaration-data.bmp.
+  // Without caching these, search breaks when HTML is restored from cache but
+  // the .bmp files are missing (causing the index to only contain project-specific
+  // declarations, not dependencies like Mathlib).
+  cacheablePaths.push("docbuild/.lake/build/doc-data");
 
   // Output status to GitHub Actions.
   core.setOutput("name", lakefile.name);
