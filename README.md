@@ -59,9 +59,11 @@ This action can automatically build a [blueprint](https://github.com/PatrickMass
 
 ### input: `homepage`
 
-Default value: `home_page`
+Default value: `docs`
 
-If you would like more than just a `docs` and a `blueprint` folder, this action automatically runs the [Jekyll](https://jekyllrb.com/) site generator for you. Run `jekyll new home_page` in your project folder and commit the resulting `home_page` folder. The action will automatically detect the `home_page` folder and build it for you alongside the API documentation and the blueprint. After CI is complete, the compiled site will be available in `https://YOUR_USERNAME.github.io/YOUR_PROJECT_NAME`.
+If you would like more than just API documentation and a `blueprint` folder, this action automatically runs the [Jekyll](https://jekyllrb.com/) site generator for you. Run `jekyll new docs` in your project folder and commit the resulting `docs` folder. The action will automatically detect the `docs` folder and build it for you alongside the API documentation and the blueprint. After CI is complete, the compiled site will be available in `https://YOUR_USERNAME.github.io/YOUR_PROJECT_NAME`.
+
+**Note:** The `docs` folder serves dual purposes: (1) it's the default location for your Jekyll site, and (2) the API documentation is placed in a `docs` subdirectory within it (i.e., `docs/docs/`). If you only want API documentation without a custom Jekyll site, you can set `build-page: false` to skip Jekyll entirely.
 
 ### input: `build-args`
 
@@ -106,6 +108,8 @@ Set to true to deploy the built documentation (API docs and/or blueprint and/or 
 Default value: `references.bib`
 
 Path to a BibTeX (.bib) file used for generating the references page and link formatting.
+
+**Note:** If you don't have a `references.bib` file and encounter errors like `no such file or directory: references.bib`, this is a known issue in older versions of doc-gen4. It was fixed in [doc-gen4 PR #354](https://github.com/leanprover/doc-gen4/pull/354). Projects using Lean toolchains v4.28.0 or later will automatically get this fix. For older toolchains, you can work around this by creating an empty `references.bib` file in your repository root.
 
 ## Deprecated Parameters
 
