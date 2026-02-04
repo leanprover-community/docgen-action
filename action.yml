@@ -120,7 +120,7 @@ runs:
 
     - name: Build project API documentation
       # TODO: When dropping deprecation support, change this back to: inputs.api-docs == 'true'
-      if: github.event_name == 'push' && env.API_DOCS == 'true'
+      if: env.API_DOCS == 'true'
       run: ${{ github.action_path }}/scripts/build_docs.sh
       shell: bash
       env:
@@ -130,7 +130,7 @@ runs:
         REFERENCES : ${{ inputs.references }}
 
     - name: Bundle dependencies
-      if: github.event_name == 'push' && inputs.build-page == 'true' && env.DOCS_EXISTS == 'true'
+      if: inputs.build-page == 'true' && env.DOCS_EXISTS == 'true'
       uses: ruby/setup-ruby@eaecf785f6a34567a6d97f686bbb7bccc1ac1e5c # v1.237.0
       with:
         working-directory: ${{ inputs.homepage }}
@@ -138,7 +138,7 @@ runs:
         bundler-cache: true # Enable caching for bundler
 
     - name: Build website using Jekyll
-      if: github.event_name == 'push' && inputs.build-page == 'true' && env.DOCS_EXISTS == 'true'
+      if: inputs.build-page == 'true' && env.DOCS_EXISTS == 'true'
       working-directory: ${{ inputs.homepage }}
       env:
         JEKYLL_GITHUB_TOKEN: ${{ github.token }}
@@ -146,12 +146,12 @@ runs:
       shell: bash
 
     - name: "Upload website (API documentation, blueprint and any home page)"
-      if: github.event_name == 'push' && inputs.deploy == 'true'
+      if: inputs.deploy == 'true'
       uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
       with:
         path: ${{ env.DOCS_EXISTS == 'true' && format('{0}/_site', inputs.homepage) || format('{0}/', inputs.homepage) }}
 
     - name: Deploy to GitHub Pages
-      if: github.event_name == 'push' && inputs.deploy == 'true'
+      if: inputs.deploy == 'true'
       id: deployment
       uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5
