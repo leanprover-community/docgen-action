@@ -27277,7 +27277,7 @@ function getInputWithDeprecation(newName, oldName, options = {}) {
   const newValue = core.getInput(newName, options);
   const oldValue = core.getInput(oldName, options);
 
-  if (oldValue && !newValue) {
+  if (oldValue) {
     console.warn(
       `Warning: The input parameter '${oldName}' is deprecated and will be removed in a future version. Please use '${newName}' instead.`,
     );
