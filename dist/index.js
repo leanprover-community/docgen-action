@@ -28426,8 +28426,10 @@ try {
   // the .bmp files are missing (causing the index to only contain project-specific
   // declarations, not dependencies like Mathlib).
   cacheablePaths.push("docbuild/.lake/build/doc-data");
-  // Also cache references.bib.
+  // Also cache static files needed for the build to succeed.
+  // Compare the `staticFiles` array in the doc-gen4 lakefile.
   cacheablePaths.push("docbuild/.lake/build/doc/references.bib");
+  cacheablePaths.push("docbuild/.lake/build/doc/style.css");
 
   // Output status to GitHub Actions.
   core.setOutput("name", lakefile.name);
