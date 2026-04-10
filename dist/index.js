@@ -28427,9 +28427,34 @@ try {
   // declarations, not dependencies like Mathlib).
   cacheablePaths.push("docbuild/.lake/build/doc-data");
   // Also cache static files needed for the build to succeed.
-  // Compare the `staticFiles` array in the doc-gen4 lakefile.
-  cacheablePaths.push("docbuild/.lake/build/doc/references.bib");
+  // Compare doc-gen4 lakefile.
+  cacheablePaths.push(
+    "docbuild/.lake/build/doc/declarations/declaration-data.bmp",
+  );
+  cacheablePaths.push("docbuild/.lake/build/api-docs.db");
+  cacheablePaths.push("docbuild/.lake/build/doc-manifest.json");
   cacheablePaths.push("docbuild/.lake/build/doc/style.css");
+  cacheablePaths.push("docbuild/.lake/build/doc/favicon.svg");
+  cacheablePaths.push("docbuild/.lake/build/doc/declaration-data.js");
+  cacheablePaths.push("docbuild/.lake/build/doc/color-scheme.js");
+  cacheablePaths.push("docbuild/.lake/build/doc/nav.js");
+  cacheablePaths.push("docbuild/.lake/build/doc/jump-src.js");
+  cacheablePaths.push("docbuild/.lake/build/doc/expand-nav.js");
+  cacheablePaths.push("docbuild/.lake/build/doc/how-about.js");
+  cacheablePaths.push("docbuild/.lake/build/doc/search.js");
+  cacheablePaths.push("docbuild/.lake/build/doc/mathjax-config.js");
+  cacheablePaths.push("docbuild/.lake/build/doc/instances.js");
+  cacheablePaths.push("docbuild/.lake/build/doc/importedBy.js");
+  cacheablePaths.push("docbuild/.lake/build/doc/index.html");
+  cacheablePaths.push("docbuild/.lake/build/doc/404.html");
+  cacheablePaths.push("docbuild/.lake/build/doc/navbar.html");
+  cacheablePaths.push("docbuild/.lake/build/doc/search.html");
+  cacheablePaths.push("docbuild/.lake/build/doc/foundational_types.html");
+  cacheablePaths.push("docbuild/.lake/build/doc/references.html");
+  cacheablePaths.push("docbuild/.lake/build/doc/references.bib");
+  cacheablePaths.push("docbuild/.lake/build/doc/tactics.html");
+  cacheablePaths.push("docbuild/.lake/build/doc/find/index.html");
+  cacheablePaths.push("docbuild/.lake/build/doc/find/find.js");
 
   // Output status to GitHub Actions.
   core.setOutput("name", lakefile.name);
