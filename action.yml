@@ -47,7 +47,7 @@ inputs:
     required: false
   references:
     description: Path to a BibTeX (.bib) file used for generating the references page and link formatting.
-    required : false
+    required: false
     default: "references.bib"
 runs:
   using: "composite"
@@ -134,7 +134,7 @@ runs:
         NAME: ${{ steps.determine-project-metadata.outputs.name }}
         DOCS_FACETS: ${{ steps.determine-project-metadata.outputs.docs_facets }}
         HOMEPAGE: ${{ inputs.homepage }}
-        REFERENCES : ${{ inputs.references }}
+        REFERENCES: ${{ inputs.references }}
 
     - name: Bundle dependencies
       if: github.event_name == 'push' && inputs.build-page == 'true' && env.DOCS_EXISTS == 'true'
