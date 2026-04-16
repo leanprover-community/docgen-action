@@ -67,13 +67,13 @@ version = "0.1.0"
 packagesDir = "../.lake/packages"
 
 [[require]]
-name = "$NAME"
-path = "../"
-
-[[require]]
 scope = "leanprover"
 name = "doc-gen4"
 rev = "$DOC_GEN_REV"
+
+[[require]]
+name = "$NAME"
+path = "../"
 EOF
 
 # Initialise docbuild as a Lean project
