@@ -47,8 +47,12 @@ inputs:
     required: false
   references:
     description: Path to a BibTeX (.bib) file used for generating the references page and link formatting.
-    required : false
+    required: false
     default: "references.bib"
+  use-github-cache:
+    description: Whether to use the GitHub Actions cache to accelerate the build. Defaults to true.
+    required: false
+    default: "true" # Use string instead of boolean for consistency with lean-action
 runs:
   using: "composite"
   steps:
@@ -57,6 +61,13 @@ runs:
       id: deprecation
       run: node "${{ github.action_path }}/dist/deprecation.js"
       shell: bash
+      env:
+        INPUT_API-DOCS: ${{ inputs.api-docs }}
+        INPUT_API_DOCS: ${{ inputs.api_docs }}
+        INPUT_BUILD-ARGS: ${{ inputs.build-args }}
+        INPUT_BUILD_ARGS: ${{ inputs.build_args }}
+        INPUT_LAKE-PACKAGE-DIRECTORY: ${{ inputs.lake-package-directory }}
+        INPUT_LAKE_PACKAGE_DIRECTORY: ${{ inputs.lake_package_directory }}
 
     - name: Parse the project metadata.
       id: determine-project-metadata
@@ -71,6 +82,7 @@ runs:
       # and so we skip the caching step, instead of erroring due to an empty `path` input.
       # TODO: When dropping deprecation support, change this back to: inputs.api-docs == 'true'
       if: |
+        inputs.use-github-cache == 'true' &&
         github.event_name == 'push' && env.API_DOCS == 'true' &&
           steps.determine-project-metadata.outputs.cached_docbuild_dependencies != ''
       uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
@@ -127,7 +139,7 @@ runs:
         NAME: ${{ steps.determine-project-metadata.outputs.name }}
         DOCS_FACETS: ${{ steps.determine-project-metadata.outputs.docs_facets }}
         HOMEPAGE: ${{ inputs.homepage }}
-        REFERENCES : ${{ inputs.references }}
+        REFERENCES: ${{ inputs.references }}
 
     - name: Bundle dependencies
       if: inputs.build-page == 'true' && env.DOCS_EXISTS == 'true'
