@@ -49,6 +49,15 @@ inputs:
     description: Path to a BibTeX (.bib) file used for generating the references page and link formatting.
     required: false
     default: "references.bib"
+  ruby-version:
+    description: |
+      The Ruby version used to build the Jekyll homepage.
+      Keep this aligned with the Gemfile.lock in your homepage folder.
+      The value is passed to ruby/setup-ruby, so it also accepts "default",
+      ".ruby-version", ".tool-versions" or "mise.toml" to read the version
+      from the corresponding file in the homepage folder.
+    required: false
+    default: "3.4"
   use-github-cache:
     description: Whether to use the GitHub Actions cache to accelerate the build. Defaults to true.
     required: false
@@ -146,7 +155,7 @@ runs:
       uses: ruby/setup-ruby@eaecf785f6a34567a6d97f686bbb7bccc1ac1e5c # v1.237.0
       with:
         working-directory: ${{ inputs.homepage }}
-        ruby-version: "3.4" # Specify Ruby version
+        ruby-version: ${{ inputs.ruby-version }}
         bundler-cache: true # Enable caching for bundler
 
     - name: Build website using Jekyll

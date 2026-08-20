@@ -111,6 +111,14 @@ Path to a BibTeX (.bib) file used for generating the references page and link fo
 
 **Note:** If you don't have a `references.bib` file and encounter errors like `no such file or directory: references.bib`, this is a known issue in older versions of doc-gen4. It was fixed in [doc-gen4 PR #354](https://github.com/leanprover/doc-gen4/pull/354). Projects using Lean toolchains v4.28.0 or later will automatically get this fix. For older toolchains, you can work around this by creating an empty `references.bib` file in your repository root.
 
+### input: `ruby-version`
+
+Default value: `3.4`
+
+The Ruby version used to build the Jekyll homepage (see the `homepage` input). The action uses Ruby only for this purpose. Keep this version aligned with the `Gemfile.lock` in your homepage folder: to refresh the lockfile, run `bundle lock --update --add-platform x86_64-linux` on the same Ruby version.
+
+The value is passed to [ruby/setup-ruby](https://github.com/ruby/setup-ruby). Set it to `default` to read the version from a `.ruby-version`, `.tool-versions` or `mise.toml` file in the homepage folder. Set it to one of those file names to read that specific file. Quote the value in your workflow: an unquoted `3.0` in YAML becomes `3`.
+
 ## Deprecated Parameters
 
 The following parameter names are deprecated and will be removed in a future version:
