@@ -119,6 +119,8 @@ The Ruby version used to build the Jekyll homepage (see the `homepage` input). T
 
 The value is passed to [ruby/setup-ruby](https://github.com/ruby/setup-ruby). Set it to `default` to read the version from a `.ruby-version`, `.tool-versions` or `mise.toml` file in the homepage folder. Set it to one of those file names to read that specific file. Quote the value in your workflow: an unquoted `3.0` in YAML becomes `3`.
 
+To pin the Ruby version in the project with one source of truth: put a full version (for example `3.4.3`) in a `.ruby-version` file in the homepage folder, set `ruby-version: default` in the workflow, and declare the same version in the homepage `Gemfile` with `ruby "3.4.3"`. Bundler then refuses to run with a different Ruby, and dependency update tools resolve gem updates against the pinned version.
+
 ## Deprecated Parameters
 
 The following parameter names are deprecated and will be removed in a future version:
