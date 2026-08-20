@@ -142,12 +142,108 @@ runs:
         REFERENCES: ${{ inputs.references }}
 
     - name: Bundle dependencies
+      id: bundle
       if: github.event_name == 'push' && inputs.build-page == 'true' && env.DOCS_EXISTS == 'true'
       uses: ruby/setup-ruby@eaecf785f6a34567a6d97f686bbb7bccc1ac1e5c # v1.237.0
       with:
         working-directory: ${{ inputs.homepage }}
         ruby-version: "3.4" # Specify Ruby version
         bundler-cache: true # Enable caching for bundler
+
+    - name: Diagnose the failed bundle install
+      id: diagnose-bundle-failure
+      if: ${{ !cancelled() && steps.bundle.outcome == 'failure' }}
+      working-directory: ${{ inputs.homepage }}
+      env:
+        JEKYLL_GITHUB_TOKEN: ${{ github.token }}
+      shell: bash
+      run: |
+        # `bundle install` failed. Find out whether a refreshed Gemfile.lock
+        # fixes it: reproduce the failure with the committed lockfile, relock,
+        # install, and rebuild the site. Every command runs in (or installs
+        # into) a scratch directory, so the workspace and the build do not
+        # change. The step itself succeeds so the diagnosis is not reported
+        # as a second failure; the run stays red because `bundle` failed.
+        summary() { echo "$1" >> "$GITHUB_STEP_SUMMARY"; }
+        tail_to_summary() {
+          summary '```'
+          tail -n 15 "$1" >> "$GITHUB_STEP_SUMMARY"
+          summary '```'
+        }
+        summary '## `bundle install` failed: diagnosis'
+        if ! command -v bundle >/dev/null 2>&1; then
+          summary 'Ruby was not installed, so the failure comes before `bundle install`. Check the Ruby version and the setup-ruby log.'
+          exit 0
+        fi
+        scratch="$(mktemp -d)"
+        # Isolate from the .bundle/config that setup-ruby wrote before it failed.
+        export BUNDLE_APP_CONFIG="$scratch/.bundle"
+        export BUNDLE_PATH="$scratch/vendor"
+        cp Gemfile "$scratch/"
+        for f in Gemfile.lock .ruby-version .tool-versions mise.toml; do
+          if [ -f "$f" ]; then cp "$f" "$scratch/"; fi
+        done
+        ruby_desc="$(ruby -e 'print RUBY_DESCRIPTION')"
+
+        echo '::group::Reproduce with the committed Gemfile.lock'
+        if (cd "$scratch" && bundle install 2>&1 | tee reproduce.log); then
+          echo '::endgroup::'
+          summary "A second \`bundle install\` with the committed \`Gemfile.lock\` succeeded on this runner ($ruby_desc)."
+          summary 'The first failure looks transient (for example a network error). Re-run the job.'
+          exit 0
+        fi
+        echo '::endgroup::'
+
+        echo '::group::Refresh the lockfile'
+        if ! (cd "$scratch" && bundle lock --update --add-platform x86_64-linux aarch64-linux 2>&1 | tee lock.log); then
+          echo '::endgroup::'
+          summary 'The failure reproduces, and dependency resolution fails even without the lockfile pins.'
+          summary 'A refreshed lockfile does not fix this. Last lines of `bundle lock --update`:'
+          tail_to_summary "$scratch/lock.log"
+          exit 0
+        fi
+        echo '::endgroup::'
+
+        echo '::group::Install with the refreshed Gemfile.lock'
+        if ! (cd "$scratch" && bundle install 2>&1 | tee install.log); then
+          echo '::endgroup::'
+          summary 'The failure reproduces, and `bundle install` fails with a refreshed lockfile too.'
+          summary 'This does not look like a lockfile problem. Last lines:'
+          tail_to_summary "$scratch/install.log"
+          exit 0
+        fi
+        echo '::endgroup::'
+
+        echo '::group::Build the site with the refreshed Gemfile.lock'
+        built=true
+        if ! BUNDLE_GEMFILE="$scratch/Gemfile" JEKYLL_ENV=production \
+            bundle exec jekyll build --destination "$scratch/_site" 2>&1 | tee "$scratch/build.log"; then
+          built=false
+        fi
+        echo '::endgroup::'
+
+        mkdir -p "$scratch/artifact"
+        cp "$scratch/Gemfile.lock" "$scratch/artifact/Gemfile.lock"
+        echo "artifact-dir=$scratch/artifact" >> "$GITHUB_OUTPUT"
+        echo "upload=true" >> "$GITHUB_OUTPUT"
+        summary 'The failure reproduces with the committed `Gemfile.lock`, and it goes away with a refreshed one.'
+        if [ "$built" = true ]; then
+          summary "Verification on this runner ($ruby_desc): \`bundle install\` succeeds and Jekyll builds the site."
+        else
+          summary '`bundle install` succeeds with the refreshed lockfile, but `jekyll build` still fails, so the site needs more changes than the lockfile. Last lines:'
+          tail_to_summary "$scratch/build.log"
+        fi
+        summary ''
+        summary 'The refreshed `Gemfile.lock` is attached to this run as the `refreshed-Gemfile.lock` artifact.'
+        summary 'To fix the build, download the artifact and commit the file as `${{ inputs.homepage }}/Gemfile.lock`.'
+        summary 'Alternative: run `bundle lock --update --add-platform x86_64-linux` on the same Ruby version and commit the result.'
+
+    - name: Upload the refreshed Gemfile.lock
+      if: ${{ !cancelled() && steps.diagnose-bundle-failure.outputs.upload == 'true' }}
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      with:
+        name: refreshed-Gemfile.lock
+        path: ${{ steps.diagnose-bundle-failure.outputs.artifact-dir }}
 
     - name: Build website using Jekyll
       if: github.event_name == 'push' && inputs.build-page == 'true' && env.DOCS_EXISTS == 'true'
