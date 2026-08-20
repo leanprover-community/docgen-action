@@ -175,6 +175,10 @@ runs:
           summary 'Ruby was not installed, so the failure comes before `bundle install`. Check the Ruby version and the setup-ruby log.'
           exit 0
         fi
+        if [ ! -f Gemfile ]; then
+          summary 'There is no `Gemfile` in `${{ inputs.homepage }}`, so the diagnosis cannot run. Check the setup-ruby log.'
+          exit 0
+        fi
         scratch="$(mktemp -d)"
         # Isolate from the .bundle/config that setup-ruby wrote before it failed.
         export BUNDLE_APP_CONFIG="$scratch/.bundle"
@@ -226,19 +230,21 @@ runs:
         cp "$scratch/Gemfile.lock" "$scratch/artifact/Gemfile.lock"
         echo "artifact-dir=$scratch/artifact" >> "$GITHUB_OUTPUT"
         echo "upload=true" >> "$GITHUB_OUTPUT"
-        summary 'The failure reproduces with the committed `Gemfile.lock`, and it goes away with a refreshed one.'
-        if [ "$built" = true ]; then
-          summary "Verification on this runner ($ruby_desc): \`bundle install\` succeeds and Jekyll builds the site."
-        else
-          summary '`bundle install` succeeds with the refreshed lockfile, but `jekyll build` still fails, so the site needs more changes than the lockfile. Last lines:'
-          tail_to_summary "$scratch/build.log"
-        fi
-        summary ''
-        summary 'The refreshed `Gemfile.lock` is attached to this run as the `refreshed-Gemfile.lock` artifact. Two ways to fix the build:'
-        summary '1. Download the artifact and commit the file as `${{ inputs.homepage }}/Gemfile.lock`. (Or run `bundle lock --update --add-platform x86_64-linux` on the same Ruby version and commit the result.)'
-        summary '2. Keep the current lockfile and set the `ruby-version` input of this action to a Ruby version that the lockfile supports. The bundler error above names the requirement.'
         ruby_ver="$(ruby -e 'print RUBY_VERSION')"
-        echo "::error::bundle install failed with the committed ${{ inputs.homepage }}/Gemfile.lock, but succeeds with a refreshed lockfile on Ruby $ruby_ver. Fix: commit the refreshed-Gemfile.lock artifact from this run, or set the action's ruby-version input to a version that the current lockfile supports. Details in the run summary."
+        summary 'The `bundle install` failure reproduces with the committed `Gemfile.lock` and goes away with a refreshed one.'
+        summary 'The refreshed `Gemfile.lock` is attached to this run as the `refreshed-Gemfile.lock` artifact.'
+        summary ''
+        if [ "$built" = true ]; then
+          summary "Verification on this runner ($ruby_desc): \`bundle install\` succeeds and Jekyll builds the site with the refreshed lockfile. Two ways to fix the build:"
+          summary '1. Download the artifact and commit the file as `${{ inputs.homepage }}/Gemfile.lock`. (Or run `bundle lock --update --add-platform x86_64-linux` on the same Ruby version and commit the result.)'
+          summary '2. Keep the current lockfile and set the `ruby-version` input of this action to a Ruby version that the lockfile supports. The `bundle install` error in the job log names the requirement.'
+          echo "::error::bundle install failed with the committed ${{ inputs.homepage }}/Gemfile.lock, but succeeds with a refreshed lockfile on Ruby $ruby_ver. Fix: commit the refreshed-Gemfile.lock artifact from this run, or set the action's ruby-version input to a version that the current lockfile supports. Details in the run summary."
+        else
+          summary 'However, `jekyll build` fails with the refreshed lockfile, so the refreshed lockfile alone does not fix the build. Last lines of `jekyll build`:'
+          tail_to_summary "$scratch/build.log"
+          summary 'Either update the site for the newer gem versions and commit the refreshed lockfile together with those changes, or keep the current lockfile and set the `ruby-version` input of this action to a Ruby version that the lockfile supports. The `bundle install` error in the job log names the requirement.'
+          echo "::error::bundle install failed with the committed ${{ inputs.homepage }}/Gemfile.lock. A refreshed lockfile repairs the install on Ruby $ruby_ver, but jekyll build then fails, so the refreshed lockfile alone does not fix the build. Details and options in the run summary."
+        fi
 
     - name: Upload the refreshed Gemfile.lock
       if: ${{ !cancelled() && steps.diagnose-bundle-failure.outputs.upload == 'true' }}
