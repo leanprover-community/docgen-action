@@ -65,6 +65,8 @@ If you would like more than just API documentation and a `blueprint` folder, thi
 
 **Note:** The `docs` folder serves dual purposes: (1) it's the default location for your Jekyll site, and (2) the API documentation is placed in a `docs` subdirectory within it (i.e., `docs/docs/`). If you only want API documentation without a custom Jekyll site, you can set `build-page: false` to skip Jekyll entirely.
 
+The action builds the homepage on every event that triggers your workflow, so a `pull_request` event validates the Jekyll build before a merge. The API documentation build and the deployment to GitHub Pages run only on `push` events.
+
 ### input: `build-args`
 
 Default value: `--log-level=warning`
