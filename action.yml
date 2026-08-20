@@ -234,9 +234,11 @@ runs:
           tail_to_summary "$scratch/build.log"
         fi
         summary ''
-        summary 'The refreshed `Gemfile.lock` is attached to this run as the `refreshed-Gemfile.lock` artifact.'
-        summary 'To fix the build, download the artifact and commit the file as `${{ inputs.homepage }}/Gemfile.lock`.'
-        summary 'Alternative: run `bundle lock --update --add-platform x86_64-linux` on the same Ruby version and commit the result.'
+        summary 'The refreshed `Gemfile.lock` is attached to this run as the `refreshed-Gemfile.lock` artifact. Two ways to fix the build:'
+        summary '1. Download the artifact and commit the file as `${{ inputs.homepage }}/Gemfile.lock`. (Or run `bundle lock --update --add-platform x86_64-linux` on the same Ruby version and commit the result.)'
+        summary '2. Keep the current lockfile and set the `ruby-version` input of this action to a Ruby version that the lockfile supports. The bundler error above names the requirement.'
+        ruby_ver="$(ruby -e 'print RUBY_VERSION')"
+        echo "::error::bundle install failed with the committed ${{ inputs.homepage }}/Gemfile.lock, but succeeds with a refreshed lockfile on Ruby $ruby_ver. Fix: commit the refreshed-Gemfile.lock artifact from this run, or set the action's ruby-version input to a version that the current lockfile supports. Details in the run summary."
 
     - name: Upload the refreshed Gemfile.lock
       if: ${{ !cancelled() && steps.diagnose-bundle-failure.outputs.upload == 'true' }}
