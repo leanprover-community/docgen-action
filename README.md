@@ -63,6 +63,8 @@ Default value: `docs`
 
 If you would like more than just API documentation and a `blueprint` folder, this action automatically runs the [Jekyll](https://jekyllrb.com/) site generator for you. Run `jekyll new docs` in your project folder and commit the resulting `docs` folder. The action will automatically detect the `docs` folder and build it for you alongside the API documentation and the blueprint. After CI is complete, the compiled site will be available in `https://YOUR_USERNAME.github.io/YOUR_PROJECT_NAME`.
 
+When you set up the site, pin the Ruby version in the project: put a full version (for example `3.4.3`) in `docs/.ruby-version`, declare the same version in `docs/Gemfile` with `ruby "3.4.3"`, and set `ruby-version: default` in the workflow (see the `ruby-version` input below). One file then controls the Ruby version everywhere: this action reads it, Bundler refuses to run with a different Ruby, and dependency update tools resolve gem updates against it. When you later change the version, refresh `docs/Gemfile.lock` with `bundle lock --update --add-platform x86_64-linux` on the new Ruby.
+
 **Note:** The `docs` folder serves dual purposes: (1) it's the default location for your Jekyll site, and (2) the API documentation is placed in a `docs` subdirectory within it (i.e., `docs/docs/`). If you only want API documentation without a custom Jekyll site, you can set `build-page: false` to skip Jekyll entirely.
 
 ### input: `build-args`
@@ -110,6 +112,16 @@ Default value: `references.bib`
 Path to a BibTeX (.bib) file used for generating the references page and link formatting.
 
 **Note:** If you don't have a `references.bib` file and encounter errors like `no such file or directory: references.bib`, this is a known issue in older versions of doc-gen4. It was fixed in [doc-gen4 PR #354](https://github.com/leanprover/doc-gen4/pull/354). Projects using Lean toolchains v4.28.0 or later will automatically get this fix. For older toolchains, you can work around this by creating an empty `references.bib` file in your repository root.
+
+### input: `ruby-version`
+
+Default value: `3.4`
+
+The Ruby version used to build the Jekyll homepage (see the `homepage` input). The action uses Ruby only for this purpose. Keep this version aligned with the `Gemfile.lock` in your homepage folder: to refresh the lockfile, run `bundle lock --update --add-platform x86_64-linux` on the same Ruby version.
+
+The value is passed to [ruby/setup-ruby](https://github.com/ruby/setup-ruby). Set it to `default` to read the version from a `.ruby-version`, `.tool-versions` or `mise.toml` file in the homepage folder. Set it to one of those file names to read that specific file. Quote the value in your workflow: an unquoted `3.0` in YAML becomes `3`.
+
+To pin the version in the project instead of the workflow, see the setup instructions in the `homepage` input above.
 
 ## Deprecated Parameters
 
