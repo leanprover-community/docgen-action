@@ -151,7 +151,7 @@ runs:
         REFERENCES: ${{ inputs.references }}
 
     - name: Bundle dependencies
-      if: github.event_name == 'push' && inputs.build-page == 'true' && env.DOCS_EXISTS == 'true'
+      if: inputs.build-page == 'true' && env.DOCS_EXISTS == 'true'
       uses: ruby/setup-ruby@eaecf785f6a34567a6d97f686bbb7bccc1ac1e5c # v1.237.0
       with:
         working-directory: ${{ inputs.homepage }}
@@ -159,7 +159,7 @@ runs:
         bundler-cache: true # Enable caching for bundler
 
     - name: Build website using Jekyll
-      if: github.event_name == 'push' && inputs.build-page == 'true' && env.DOCS_EXISTS == 'true'
+      if: inputs.build-page == 'true' && env.DOCS_EXISTS == 'true'
       working-directory: ${{ inputs.homepage }}
       env:
         JEKYLL_GITHUB_TOKEN: ${{ github.token }}
