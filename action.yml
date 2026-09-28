@@ -168,7 +168,7 @@ runs:
 
     - name: "Upload website (API documentation, blueprint and any home page)"
       if: github.event_name == 'push' && inputs.deploy == 'true'
-      uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
+      uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
       with:
         path: ${{ env.DOCS_EXISTS == 'true' && format('{0}/_site', inputs.homepage) || format('{0}/', inputs.homepage) }}
 
