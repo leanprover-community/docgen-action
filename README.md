@@ -125,6 +125,16 @@ The value is passed to [ruby/setup-ruby](https://github.com/ruby/setup-ruby). Se
 
 To pin the version in the project instead of the workflow, see the setup instructions in the `homepage` input above.
 
+### input: `use-github-cache`
+
+Allowed values: `false`, `true`
+
+Default value: `true`
+
+The action caches the doc-gen4 analysis of the project and its dependencies, so a build analyzes only the modules that changed. The API pages and the search index are written again on every build. Set this input to `false` to build without the cache.
+
+GitHub keeps at most 10 GB of cache per repository and removes the least recently used entries beyond that. If every build analyzes all modules, other caches may have pushed out the documentation entry. List the entries with `gh cache list`. [INTERNALS.md](INTERNALS.md) describes what the cache holds.
+
 ## Deprecated Parameters
 
 The following parameter names are deprecated and will be removed in a future version:
