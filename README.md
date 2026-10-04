@@ -154,14 +154,16 @@ When the deprecated parameters are ready to be removed, follow these steps:
 
 ## Testing documentation cache restores
 
-Run `npm ci` and `npm run test:cache-restore` on a GitHub Actions Ubuntu runner
+Run `npm run test:cache-restore` on a GitHub Actions Ubuntu runner
 with Lean 4.34.0 installed. The test runs `scripts/build_docs.sh`, including its
 publication step, so it requires the same Elan installation and `sudo` access.
 
 The test builds real documentation for a small project and dependency, archives
-the paths reported by `src/index.js`, and restores them without the project's
-HTML. It verifies that an ordinary Lake rebuild leaves those pages missing, then
+the paths reported by the shipped `dist/index.js`, and restores them without the
+project's HTML. It verifies that an ordinary Lake rebuild leaves those pages missing, then
 checks that the action regenerates both the root page and an imported module's
-page from unchanged sources. Lean 4.34.0 is pinned to exercise a doc-gen4 release
-with the original marker bug. The `Documentation cache regression` workflow runs
+page from unchanged sources. It also checks the dependency and core pages and
+verifies that their cached analysis markers were not rewritten. Lean 4.34.0 is
+pinned to exercise a doc-gen4 release with the original marker bug. The
+`Documentation cache regression` workflow runs
 this test for pull requests and pushes to `main`.

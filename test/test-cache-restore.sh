@@ -28,6 +28,8 @@ check_project_pages() {
     fi
     grep -q 'rootGreeting' site/docs/CacheRegression.html
     grep -q 'projectGreeting' site/docs/CacheRegression/Basic.html
+    grep -q 'dependencyGreeting' site/docs/CachedDependency/Basic.html
+    test -f site/docs/Init/Prelude.html
 }
 
 echo "Building documentation without a cache"
@@ -38,10 +40,10 @@ check_project_pages
 # another copy of the cache layout in the test. Mimic actions/cache by archiving
 # only the paths that exist; optional static files need not all be generated.
 touch "$test_dir/metadata"
-GITHUB_OUTPUT="$test_dir/metadata" node "$action_dir/src/index.js"
+GITHUB_OUTPUT="$test_dir/metadata" node "$action_dir/dist/index.js"
 awk '/^cached_docbuild_dependencies<</ {
     delimiter = substr($0, index($0, "<<") + 2)
-    while (getline > 0 && $0 != delimiter) print
+    while ((getline) > 0 && $0 != delimiter) print
     exit
 }' "$test_dir/metadata" > "$test_dir/cache-paths"
 test -s "$test_dir/cache-paths"
@@ -79,7 +81,21 @@ test ! -e docbuild/.lake/build/doc/CacheRegression
 test ! -e docbuild/.lake/build/doc/CacheRegression.html
 test ! -e docbuild/.lake/build/doc/CacheRegression
 
+# Restore again so the action sees a pristine cache, without the configuration
+# and manifest created by the plain Lake control build above.
+rm -rf docbuild
+tar -xzf "$test_dir/docs-cache.tar.gz"
+core_marker=docbuild/.lake/build/doc-data/core-Init.doc
+dependency_marker=docbuild/.lake/build/doc-data/CachedDependency.Basic.doc
+core_marker_time=$(stat -c '%y' "$core_marker")
+dependency_marker_time=$(stat -c '%y' "$dependency_marker")
+
 echo "Rebuilding unchanged sources after restoring the documentation cache"
 bash "$build_script"
 check_project_pages
+if [[ $(stat -c '%y' "$core_marker") != "$core_marker_time" ||
+      $(stat -c '%y' "$dependency_marker") != "$dependency_marker_time" ]]; then
+    echo "FAIL: cached core or dependency analysis was regenerated" >&2
+    exit 1
+fi
 echo "PASS: the restored cache produces complete project documentation"
