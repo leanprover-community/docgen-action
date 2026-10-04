@@ -1,0 +1,5 @@
+name = "CachedDependency"
+reservoir = false
+
+[[lean_lib]]
+name = "CachedDependency"

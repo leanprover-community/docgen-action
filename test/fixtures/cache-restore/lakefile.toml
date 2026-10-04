@@ -1,0 +1,10 @@
+name = "CacheRegression"
+reservoir = false
+defaultTargets = ["CacheRegression"]
+
+[[require]]
+name = "CachedDependency"
+path = "dependency"
+
+[[lean_lib]]
+name = "CacheRegression"

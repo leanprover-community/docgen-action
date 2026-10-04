@@ -1,0 +1,35 @@
+name: Documentation cache regression
+
+on:
+  pull_request:
+    paths:
+      - "scripts/**"
+      - "src/**"
+      - "test/**"
+      - "package*.json"
+      - "action.yml"
+      - ".github/workflows/cache-restore-test.yml"
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cache-restore:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm ci
+      - uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: test/fixtures/cache-restore
+          build: false
+          test: false
+          lint: false
+          use-github-cache: false
+      - run: npm run test:cache-restore
