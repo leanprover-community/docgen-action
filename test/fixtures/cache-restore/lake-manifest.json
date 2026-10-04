@@ -1,0 +1,18 @@
+{
+  "version": "1.2.0",
+  "packagesDir": ".lake/packages",
+  "packages": [
+    {
+      "type": "path",
+      "scope": "",
+      "name": "CachedDependency",
+      "manifestFile": "lake-manifest.json",
+      "inherited": false,
+      "dir": "dependency",
+      "configFile": "lakefile.toml"
+    }
+  ],
+  "name": "CacheRegression",
+  "lakeDir": ".lake",
+  "fixedToolchain": false
+}
