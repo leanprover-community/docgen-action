@@ -6,8 +6,10 @@ build_script=${1:-"$action_dir/scripts/build_docs.sh"}
 test_dir=$(mktemp -d)
 trap 'rm -rf "$test_dir"' EXIT
 
-# The sources do not change between the builds, so the cache restore alone
-# decides whether the HTML pass runs.
+# This test covers #33: after a cache restore, the site has no pages of the
+# project. The fixture pins v4.34.0, which predates leanprover/doc-gen4#418.
+# The sources do not change between the builds, so the test also covers
+# doc-gen4 releases with #418.
 cp -R "$action_dir/test/fixtures/cache-restore" "$test_dir/project"
 cd "$test_dir/project"
 export DOCGEN_SRC=file
