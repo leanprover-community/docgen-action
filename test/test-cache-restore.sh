@@ -6,13 +6,38 @@ build_script=${1:-"$action_dir/scripts/build_docs.sh"}
 test_dir=$(mktemp -d)
 trap 'rm -rf "$test_dir"' EXIT
 
+fail() {
+    echo "FAIL: $*" >&2
+    exit 1
+}
+expect_file() {
+    test -f "$1" || fail "$1 is missing"
+}
+expect_absent() {
+    test ! -e "$1" || fail "$1 exists"
+}
+expect_text() {
+    grep -q "$2" "$1" || fail "$1 does not contain $2"
+}
+
 # This test covers #33: after a cache restore, the site has no pages of the
-# project. The fixture pins v4.34.0, which predates leanprover/doc-gen4#418.
-# The sources do not change between the builds, so the test also covers
-# doc-gen4 releases with #418.
+# project. The test uses the latest Lean release and the doc-gen4 tag of the
+# same name, so that a change in a new doc-gen4 release shows up here.
+# `LEAN_VERSION` overrides the release. The sources do not change between the
+# builds, so the test covers doc-gen4 releases with and without
+# leanprover/doc-gen4#418.
+lean_version=${LEAN_VERSION:-$(gh api repos/leanprover/lean4/releases/latest --jq .tag_name)}
+if [[ ! "$lean_version" =~ ^v4\.[0-9]+\.[0-9]+$ ]]; then
+    fail "'$lean_version' is not a Lean release tag of the form v4.X.Y"
+fi
+if [[ -z $(git ls-remote --tags https://github.com/leanprover/doc-gen4 "refs/tags/$lean_version") ]]; then
+    fail "doc-gen4 has no tag $lean_version"
+fi
+echo "Using Lean $lean_version"
+
 cp -R "$action_dir/test/fixtures/cache-restore" "$test_dir/project"
 cd "$test_dir/project"
-export DOCGEN_SRC=file
+printf 'leanprover/lean4:%s\n' "$lean_version" > lean-toolchain
 export NAME=CacheRegression
 export DOCS_FACETS=CacheRegression:docs
 export HOMEPAGE=site
@@ -24,13 +49,12 @@ lake build
 check_project_pages() {
     if ! test -f site/docs/CacheRegression.html ||
        ! test -f site/docs/CacheRegression/Basic.html; then
-        echo "FAIL: the deployed project pages are missing" >&2
-        return 1
+        fail "the deployed project pages are missing"
     fi
-    grep -q 'rootGreeting' site/docs/CacheRegression.html
-    grep -q 'projectGreeting' site/docs/CacheRegression/Basic.html
-    grep -q 'dependencyGreeting' site/docs/CachedDependency/Basic.html
-    test -f site/docs/Init/Prelude.html
+    expect_text site/docs/CacheRegression.html rootGreeting
+    expect_text site/docs/CacheRegression/Basic.html projectGreeting
+    expect_text site/docs/CachedDependency/Basic.html dependencyGreeting
+    expect_file site/docs/Init/Prelude.html
 }
 
 echo "Building documentation without a cache"
@@ -47,7 +71,7 @@ awk '/^cached_docbuild_dependencies<</ {
     while ((getline) > 0 && $0 != delimiter) print
     exit
 }' "$test_dir/metadata" > "$test_dir/cache-paths"
-test -s "$test_dir/cache-paths"
+test -s "$test_dir/cache-paths" || fail "dist/index.js reports no cache paths"
 while IFS= read -r cache_path; do
     if test -e "$cache_path"; then
         printf '%s\n' "$cache_path"
@@ -64,12 +88,13 @@ tar -xzf "$test_dir/docs-cache.tar.gz"
 # Check the restored state: the HTML of the dependency, the database, the
 # analysis markers and the HTML marker exist, and the HTML of the project does
 # not.
-test -f docbuild/.lake/build/doc/CachedDependency/Basic.html
-test -f docbuild/.lake/build/api-docs.db
-test -f docbuild/.lake/build/doc-data/CachedDependency.Basic.doc
-test -f docbuild/.lake/build/doc-data/CacheRegression--library.docs_built
-test ! -e docbuild/.lake/build/doc/CacheRegression.html
-test ! -e docbuild/.lake/build/doc/CacheRegression
+expect_file docbuild/.lake/build/doc/CachedDependency/Basic.html
+expect_file docbuild/.lake/build/api-docs.db
+expect_file docbuild/.lake/build/doc-data/CachedDependency.Basic.doc
+expect_file docbuild/.lake/build/doc-data/CacheRegression.Basic.doc
+expect_file docbuild/.lake/build/doc-data/CacheRegression--library.docs_built
+expect_absent docbuild/.lake/build/doc/CacheRegression.html
+expect_absent docbuild/.lake/build/doc/CacheRegression
 
 # Check that a plain Lake build skips the HTML pass in this state. The build of
 # the action below must then write the pages of the project.
@@ -79,24 +104,29 @@ test ! -e docbuild/.lake/build/doc/CacheRegression
     MATHLIB_NO_CACHE_ON_UPDATE=1 lake update "$NAME"
     lake build "$DOCS_FACETS"
 )
-test ! -e docbuild/.lake/build/doc/CacheRegression.html
-test ! -e docbuild/.lake/build/doc/CacheRegression
+expect_absent docbuild/.lake/build/doc/CacheRegression.html
+expect_absent docbuild/.lake/build/doc/CacheRegression
 
 # Restore the cache again, so that the action does not see the configuration
 # and the manifest of the plain Lake build above.
 rm -rf docbuild
 tar -xzf "$test_dir/docs-cache.tar.gz"
-core_marker=docbuild/.lake/build/doc-data/core-Init.doc
-dependency_marker=docbuild/.lake/build/doc-data/CachedDependency.Basic.doc
-core_marker_time=$(stat -c '%y' "$core_marker")
-dependency_marker_time=$(stat -c '%y' "$dependency_marker")
+analysis_markers=(
+    docbuild/.lake/build/doc-data/core-Init.doc
+    docbuild/.lake/build/doc-data/CachedDependency.Basic.doc
+    docbuild/.lake/build/doc-data/CacheRegression.Basic.doc
+)
+declare -A analysis_marker_times
+for marker in "${analysis_markers[@]}"; do
+    analysis_marker_times[$marker]=$(stat -c '%y' "$marker")
+done
 
 echo "Rebuilding unchanged sources after restoring the documentation cache"
 bash "$build_script"
 check_project_pages
-if [[ $(stat -c '%y' "$core_marker") != "$core_marker_time" ||
-      $(stat -c '%y' "$dependency_marker") != "$dependency_marker_time" ]]; then
-    echo "FAIL: cached core or dependency analysis was regenerated" >&2
-    exit 1
-fi
+for marker in "${analysis_markers[@]}"; do
+    if [[ $(stat -c '%y' "$marker") != "${analysis_marker_times[$marker]}" ]]; then
+        fail "the build analyzed $(basename "$marker" .doc) again"
+    fi
+done
 echo "PASS: the restored cache produces complete project documentation"

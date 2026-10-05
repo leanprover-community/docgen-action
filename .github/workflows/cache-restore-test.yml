@@ -12,6 +12,10 @@ on:
       - ".github/workflows/cache-restore-test.yml"
   push:
     branches: [main]
+  # The test uses the latest Lean release, so a weekly run finds a doc-gen4
+  # release that breaks the action without a change to this repository.
+  schedule:
+    - cron: "0 6 * * 1"
   workflow_dispatch:
 
 permissions:
@@ -30,11 +34,12 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "22"
-      - uses: leanprover/lean-action@f061402b660e0c34644504b324e830f2991d4865 # v1
-        with:
-          lake-package-directory: test/fixtures/cache-restore
-          build: false
-          test: false
-          lint: false
-          use-github-cache: false
+      # The test chooses the Lean release, so install only Elan.
+      - name: Install Elan
+        run: |
+          curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh |
+            sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
       - run: npm run test:cache-restore
+        env:
+          GH_TOKEN: ${{ github.token }}
