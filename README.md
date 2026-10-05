@@ -158,8 +158,8 @@ When the deprecated parameters are ready to be removed, follow these steps:
 project after a cache restore. The test runs `scripts/build_docs.sh`, so it
 needs a GitHub Actions Ubuntu runner with Elan in `~/.elan` and `sudo` access.
 It also needs `gh` with a token, to find the latest Lean release. The
-`Documentation cache regression` workflow runs the test on pull requests and
-on pushes to `main`.
+`Documentation cache regression` workflow runs the test on pull requests, on
+pushes to `main` and every week.
 
 The test uses the latest Lean release and the doc-gen4 tag of the same name.
 To use a different release, set `LEAN_VERSION`, for example

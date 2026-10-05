@@ -12,6 +12,10 @@ on:
       - ".github/workflows/cache-restore-test.yml"
   push:
     branches: [main]
+  # The test uses the latest Lean release, so a weekly run finds a doc-gen4
+  # release that breaks the action without a change to this repository.
+  schedule:
+    - cron: "0 6 * * 1"
   workflow_dispatch:
 
 permissions:
