@@ -7,7 +7,11 @@ test_dir=$(mktemp -d)
 trap 'rm -rf "$test_dir"' EXIT
 
 fail() {
-    echo "FAIL: $*" >&2
+    if [[ ${GITHUB_ACTIONS:-} == true ]]; then
+        echo "::error::$*"
+    else
+        echo "FAIL: $*" >&2
+    fi
     exit 1
 }
 expect_file() {
@@ -21,15 +25,12 @@ expect_text() {
 }
 
 # This test covers #33: after a cache restore, the site has no pages of the
-# project. The test uses the latest Lean release and the doc-gen4 tag of the
-# same name, so that a change in a new doc-gen4 release shows up here.
-# `LEAN_VERSION` overrides the release. The sources do not change between the
-# builds, so the test covers doc-gen4 releases with and without
-# leanprover/doc-gen4#418.
-lean_version=${LEAN_VERSION:-$(gh api repos/leanprover/lean4/releases/latest --jq .tag_name)}
-if [[ ! "$lean_version" =~ ^v4\.[0-9]+\.[0-9]+$ ]]; then
-    fail "'$lean_version' is not a Lean release tag of the form v4.X.Y"
-fi
+# project. The test uses the newest doc-gen4 tag of a stable Lean release, so
+# that a change in a new doc-gen4 release shows up here. `LEAN_VERSION`
+# overrides the release. The sources do not change between the builds, so the
+# test covers doc-gen4 releases with and without leanprover/doc-gen4#418.
+lean_version=${LEAN_VERSION:-$(git ls-remote --tags --refs https://github.com/leanprover/doc-gen4 'v4.*' |
+    sed 's|.*refs/tags/||' | grep -E '^v4\.[0-9]+\.[0-9]+$' | sort -V | tail -1)}
 if [[ -z $(git ls-remote --tags https://github.com/leanprover/doc-gen4 "refs/tags/$lean_version") ]]; then
     fail "doc-gen4 has no tag $lean_version"
 fi

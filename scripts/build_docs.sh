@@ -101,5 +101,10 @@ rm -f .lake/build/doc-data/*.docs_built
 # Copy documentation to `$HOMEPAGE/docs`
 cd ../
 mkdir -p $HOMEPAGE
-sudo chown -R runner $HOMEPAGE
+# On a GitHub runner, the blueprint step writes to `$HOMEPAGE` from a Docker
+# container as root. Give the files to the `runner` user, so that the copy below
+# can write there.
+if [[ ${GITHUB_ACTIONS:-} == true ]]; then
+    sudo chown -R runner $HOMEPAGE
+fi
 cp -r docbuild/.lake/build/doc $HOMEPAGE/docs

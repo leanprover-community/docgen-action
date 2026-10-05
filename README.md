@@ -156,14 +156,12 @@ When the deprecated parameters are ready to be removed, follow these steps:
 
 `npm run test:cache-restore` checks that the action writes the pages of the
 project after a cache restore. The test runs `scripts/build_docs.sh`, so it
-needs a GitHub Actions Ubuntu runner with Elan in `~/.elan` and `sudo` access.
-It also needs `gh` with a token, to find the latest Lean release. The
-`Documentation cache regression` workflow runs the test on pull requests, on
-pushes to `main` and every week.
+needs Elan in `~/.elan`. Under GitHub Actions, it also needs an Ubuntu runner
+with `sudo` access.
 
-The test uses the latest Lean release and the doc-gen4 tag of the same name.
-To use a different release, set `LEAN_VERSION`, for example
-`LEAN_VERSION=v4.34.0`.
+The test uses the newest doc-gen4 tag of a stable Lean release. To use a
+different release, set `LEAN_VERSION`, for example `LEAN_VERSION=v4.35.0-rc3`.
+The test fails if doc-gen4 has no tag for the release.
 
 The test builds the documentation of a small project with one dependency. It
 restores the cache paths that `dist/index.js` reports, without the HTML of the
