@@ -38,6 +38,8 @@ echo "Using Lean $lean_version"
 cp -R "$action_dir/test/fixtures/cache-restore" "$test_dir/project"
 cd "$test_dir/project"
 printf 'leanprover/lean4:%s\n' "$lean_version" > lean-toolchain
+# The fixture has no git remote, so doc-gen4 links to the source files instead.
+export DOCGEN_SRC=file
 export NAME=CacheRegression
 export DOCS_FACETS=CacheRegression:docs
 export HOMEPAGE=site
