@@ -88,13 +88,11 @@ fi
 # Disable an error message due to a non-blocking bug. See Zulip
 MATHLIB_NO_CACHE_ON_UPDATE=1 ~/.elan/bin/lake update $NAME
 
-# Delete the markers of the HTML pass of `doc-gen4`, so that the pass runs on
-# each build. The `:docs` facet writes a marker `<target>.docs_built` in
-# `.lake/build/doc-data/`, and Lake skips the pass while the marker is up to
-# date. The cache restores the markers but not the HTML of the project.
-# Before leanprover/doc-gen4#418, a marker also stays up to date after a change
-# to a Lean file. The pass reads the cached database and takes about one minute
-# for 3000 modules.
+# Delete the HTML markers of `doc-gen4`, so that its HTML pass runs on every
+# build. The `:docs` facet writes `<target>.docs_built` in
+# `.lake/build/doc-data/`, and Lake skips the pass while this marker is up to
+# date. The cache restores the marker but not the HTML of the project. The pass
+# writes the HTML from the cached database in about one minute for 3000 modules.
 rm -f .lake/build/doc-data/*.docs_built
 
 # Build the docs

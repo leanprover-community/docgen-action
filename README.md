@@ -152,18 +152,20 @@ When the deprecated parameters are ready to be removed, follow these steps:
 5. Update `rollup.config.js` to remove the deprecation.js build target
 6. Remove this "Deprecated Parameters" section from the README
 
-## Testing documentation cache restores
+## Testing the cache restore
 
-Run `npm run test:cache-restore` on a GitHub Actions Ubuntu runner
-with Lean 4.34.0 installed. The test runs `scripts/build_docs.sh`, including its
-publication step, so it requires the same Elan installation and `sudo` access.
+`npm run test:cache-restore` checks that the action writes the pages of the
+project after a cache restore. The test runs `scripts/build_docs.sh`, so it
+needs a GitHub Actions Ubuntu runner with Elan in `~/.elan` and `sudo` access.
+The `Documentation cache regression` workflow runs the test on pull requests
+and on pushes to `main`.
 
-The test builds real documentation for a small project and dependency, archives
-the paths reported by the shipped `dist/index.js`, and restores them without the
-project's HTML. It verifies that an ordinary Lake rebuild leaves those pages missing, then
-checks that the action regenerates both the root page and an imported module's
-page from unchanged sources. It also checks the dependency and core pages and
-verifies that their cached analysis markers were not rewritten. Lean 4.34.0 is
-pinned to exercise a doc-gen4 release with the original marker bug. The
-`Documentation cache regression` workflow runs
-this test for pull requests and pushes to `main`.
+The test builds the documentation of a small project with one dependency. It
+restores the cache paths that `dist/index.js` reports, without the HTML of the
+project. Then it runs two builds:
+
+1. A plain `lake build`. It must not write the pages of the project. This shows
+   that the restored cache alone does not produce the pages.
+2. The build script of the action. It must write the pages of the project, the
+   dependency and the Lean core. It must not analyze the dependency or the Lean
+   core again.

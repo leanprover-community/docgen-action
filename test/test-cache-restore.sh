@@ -6,9 +6,8 @@ build_script=${1:-"$action_dir/scripts/build_docs.sh"}
 test_dir=$(mktemp -d)
 trap 'rm -rf "$test_dir"' EXIT
 
-# v4.34.0 predates doc-gen4#418, so this exercises a release where even changed
-# analysis does not invalidate the cached HTML marker. The second build below
-# deliberately keeps all sources unchanged, covering the remaining bug too.
+# The sources do not change between the builds, so the cache restore alone
+# decides whether the HTML pass runs.
 cp -R "$action_dir/test/fixtures/cache-restore" "$test_dir/project"
 cd "$test_dir/project"
 export DOCGEN_SRC=file
@@ -36,9 +35,9 @@ echo "Building documentation without a cache"
 bash "$build_script"
 check_project_pages
 
-# Get the cache paths from the action's metadata parser, rather than keeping
-# another copy of the cache layout in the test. Mimic actions/cache by archiving
-# only the paths that exist; optional static files need not all be generated.
+# Read the cache paths from the output of `dist/index.js`, so that the test
+# uses the same paths as the action. Archive only the paths that exist, as
+# `actions/cache` does, because the build does not write every static file.
 touch "$test_dir/metadata"
 GITHUB_OUTPUT="$test_dir/metadata" node "$action_dir/dist/index.js"
 awk '/^cached_docbuild_dependencies<</ {
@@ -55,14 +54,14 @@ done < "$test_dir/cache-paths" > "$test_dir/existing-paths"
 tar -czf "$test_dir/docs-cache.tar.gz" -T "$test_dir/existing-paths"
 cp docbuild/lakefile.toml "$test_dir/docbuild-lakefile.toml"
 
-# Retain the separate Lean build/package artifacts, but discard the entire
-# docbuild workspace and published site to model a fresh docs cache restore.
+# Keep the Lean build of the project. Replace the docbuild workspace and the
+# site with the cache contents, as a cache restore on a new runner does.
 rm -rf docbuild site
 tar -xzf "$test_dir/docs-cache.tar.gz"
 
-# Check that the restored state really has the partial-cache shape responsible
-# for the 404: dependency HTML and analysis exist, project HTML does not, and
-# Lake's HTML marker is present.
+# Check the restored state: the HTML of the dependency, the database, the
+# analysis markers and the HTML marker exist, and the HTML of the project does
+# not.
 test -f docbuild/.lake/build/doc/CachedDependency/Basic.html
 test -f docbuild/.lake/build/api-docs.db
 test -f docbuild/.lake/build/doc-data/CachedDependency.Basic.doc
@@ -70,8 +69,8 @@ test -f docbuild/.lake/build/doc-data/CacheRegression--library.docs_built
 test ! -e docbuild/.lake/build/doc/CacheRegression.html
 test ! -e docbuild/.lake/build/doc/CacheRegression
 
-# Establish that an ordinary Lake rebuild really skips the HTML pass in this
-# restored state. This makes the test fail if it stops reproducing the bug.
+# Check that a plain Lake build skips the HTML pass in this state. The build of
+# the action below must then write the pages of the project.
 (
     cd docbuild
     cp "$test_dir/docbuild-lakefile.toml" lakefile.toml
@@ -81,8 +80,8 @@ test ! -e docbuild/.lake/build/doc/CacheRegression
 test ! -e docbuild/.lake/build/doc/CacheRegression.html
 test ! -e docbuild/.lake/build/doc/CacheRegression
 
-# Restore again so the action sees a pristine cache, without the configuration
-# and manifest created by the plain Lake control build above.
+# Restore the cache again, so that the action does not see the configuration
+# and the manifest of the plain Lake build above.
 rm -rf docbuild
 tar -xzf "$test_dir/docs-cache.tar.gz"
 core_marker=docbuild/.lake/build/doc-data/core-Init.doc
