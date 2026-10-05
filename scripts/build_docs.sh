@@ -88,11 +88,23 @@ fi
 # Disable an error message due to a non-blocking bug. See Zulip
 MATHLIB_NO_CACHE_ON_UPDATE=1 ~/.elan/bin/lake update $NAME
 
+# Delete the HTML markers of `doc-gen4`, so that its HTML pass runs on every
+# build. The `:docs` facet writes `<target>.docs_built` in
+# `.lake/build/doc-data/`, and Lake skips the pass while this marker is up to
+# date. The cache restores the marker but not the HTML of the project. The pass
+# writes the HTML from the cached database in about one minute for 3000 modules.
+rm -f .lake/build/doc-data/*.docs_built
+
 # Build the docs
 ~/.elan/bin/lake build $DOCS_FACETS
 
 # Copy documentation to `$HOMEPAGE/docs`
 cd ../
 mkdir -p $HOMEPAGE
-sudo chown -R runner $HOMEPAGE
+# On a GitHub runner, the blueprint step writes to `$HOMEPAGE` from a Docker
+# container as root. Give the files to the `runner` user, so that the copy below
+# can write there.
+if [[ ${GITHUB_ACTIONS:-} == true ]]; then
+    sudo chown -R runner $HOMEPAGE
+fi
 cp -r docbuild/.lake/build/doc $HOMEPAGE/docs

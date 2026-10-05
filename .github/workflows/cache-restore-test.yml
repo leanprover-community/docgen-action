@@ -1,0 +1,43 @@
+name: Documentation cache regression
+
+on:
+  pull_request:
+    paths:
+      - "scripts/**"
+      - "src/**"
+      - "dist/**"
+      - "test/**"
+      - "package*.json"
+      - "action.yml"
+      - ".github/workflows/cache-restore-test.yml"
+  push:
+    branches: [main]
+  # The test uses the latest Lean release, so a weekly run finds a doc-gen4
+  # release that breaks the action without a change to this repository.
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-cache-regression-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  cache-restore:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "22"
+      # The test chooses the Lean release, so install only Elan.
+      - name: Install Elan
+        run: |
+          curl -sSf https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh |
+            sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+      - run: npm run test:cache-restore

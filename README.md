@@ -151,3 +151,23 @@ When the deprecated parameters are ready to be removed, follow these steps:
    - Change `${{ env.BUILD_ARGS }}` back to `${{ inputs.build-args }}`
 5. Update `rollup.config.js` to remove the deprecation.js build target
 6. Remove this "Deprecated Parameters" section from the README
+
+## Testing the cache restore
+
+`npm run test:cache-restore` checks that the action writes the pages of the
+project after a cache restore. The test runs `scripts/build_docs.sh`, so it
+needs Elan in `~/.elan`. Under GitHub Actions, it also needs an Ubuntu runner
+with `sudo` access.
+
+The test uses the newest doc-gen4 tag of a stable Lean release. To use a
+different release, set `LEAN_VERSION`, for example `LEAN_VERSION=v4.35.0-rc3`.
+The test fails if doc-gen4 has no tag for the release.
+
+The test builds the documentation of a small project with one dependency. It
+restores the cache paths that `dist/index.js` reports, without the HTML of the
+project. Then it runs two builds:
+
+1. A plain `lake build`. It must not write the pages of the project. This shows
+   that the restored cache alone does not produce the pages.
+2. The build script of the action. It must write the pages of the project, the
+   dependency and the Lean core. It must not analyze any of these modules again.

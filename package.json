@@ -14,6 +14,7 @@
     "package": "npx rollup --config rollup.config.js",
     "package:watch": "npm run package -- --watch",
     "test": "NODE_OPTIONS=--experimental-vm-modules NODE_NO_WARNINGS=1 npx jest",
+    "test:cache-restore": "bash test/test-cache-restore.sh",
     "all": "npm run format:write && npm run lint && npm run test && npm run coverage && npm run package"
   },
   "repository": {
